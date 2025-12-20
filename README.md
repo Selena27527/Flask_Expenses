@@ -1,0 +1,3 @@
+The purpose of the app is to be a goal, expenses and finance tracker. You are able to edit the goal you are looking forward to achieve and how much money is needed to achieve the goal. For exmaple I just put an apartment as the goal. Then how much money goes towards it. It does not have to be the same amount each time. Also there is for expenses. For example how much spent on groceries, a coffee, gas, uber, bus, etc... 
+
+How I used Generative AI to create the app. It assisted for the database to help me create a SQLite Goal table and the logic to update goal targets. It also helped to format Jinja2 for currency nad the Javascript to animate the progress bar. Then when I wanted to add more things it helped me fix where I made some mistakes. 
