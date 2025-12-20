@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # --- DATABASE CONFIGURATION ---
-# This points to the finance.db file you currently have in your folder
+# This points to finance.db in your main folder, NOT the instance folder
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'finance.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 # --- DATABASE MODELS ---
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    transaction_type = db.Column(db.String(20), nullable=False) # 'Goal' or 'Expense'
+    transaction_type = db.Column(db.String(20), nullable=False) 
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(100))
 
@@ -34,7 +34,6 @@ def index():
     transactions = Transaction.query.all()
     goal_data = Goal.query.first()
     
-    # Initialize a goal if database is empty
     if not goal_data:
         goal_data = Goal(name="Apartment Deposit", target=1000.0)
         db.session.add(goal_data)
@@ -81,6 +80,5 @@ def delete_transaction(id):
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    # Use the port Render expects, or default to 5000 for local
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
