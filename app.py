@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
+
+# Updated to use finance.db
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///finance.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Database Models
@@ -17,20 +21,20 @@ class Goal(db.Model):
     name = db.Column(db.String(100), default="Apartment Deposit")
     target = db.Column(db.Float, default=1000.0)
 
+# IMPORTANT: This creates the database tables on Render automatically
+with app.app_context():
+    db.create_all()
+
 @app.route('/')
 def index():
     transactions = Transaction.query.all()
-    # Get the goal from DB, or create a default one if it doesn't exist
     goal_data = Goal.query.first()
     if not goal_data:
         goal_data = Goal(name="Apartment Deposit", target=1000.0)
         db.session.add(goal_data)
         db.session.commit()
 
-    # Calculate current savings (Only 'Goal' type)
     current_savings = sum(t.amount for t in transactions if t.type == 'Goal')
-    
-    # Calculate progress percentage
     progress = min((current_savings / goal_data.target) * 100, 100) if goal_data.target > 0 else 0
     
     return render_template('index.html', 
@@ -53,19 +57,19 @@ def add_transaction():
 @app.route('/update_goal', methods=['POST'])
 def update_goal():
     goal_data = Goal.query.first()
-    goal_data.name = request.form.get('goal_name')
-    goal_data.target = float(request.form.get('goal_target'))
-    db.session.commit()
+    if goal_data:
+        goal_data.name = request.form.get('goal_name')
+        goal_data.target = float(request.form.get('goal_target'))
+        db.session.commit()
     return redirect(url_for('index'))
 
 @app.route('/delete/<int:id>')
 def delete_transaction(id):
     t = Transaction.query.get(id)
-    db.session.delete(t)
-    db.session.commit()
+    if t:
+        db.session.delete(t)
+        db.session.commit()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
