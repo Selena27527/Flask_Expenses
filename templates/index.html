@@ -2,75 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Finance Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Goal Tracker</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 500px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        /* A nice blue-to-purple gradient background */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            max-width: 600px; 
+            margin: auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
         
-        /* Goal Bar */
-        .progress-container { background: #eee; border-radius: 10px; height: 25px; margin: 15px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: #007bff; transition: width 0.5s; width: var(--pg-width); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            margin-bottom: 25px; 
+        }
 
-        .section-title { margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        input { width: 95%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
-        button { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; margin-top: 5px; }
+        h2, h3 { color: #4834d4; margin-top: 0; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
         
-        /* List Styling */
-        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 0.9rem; }
-        .tag { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; margin-right: 5px; }
-        .tag-apt { background: #e3f2fd; color: #007bff; }
-        .tag-exp { background: #fff3e0; color: #ef6c00; }
+        .progress-container { background: #dfe6e9; border-radius: 20px; height: 30px; width: 100%; margin: 15px 0; overflow: hidden; border: 1px solid #bdc3c7; }
+        .progress-bar { background: linear-gradient(90deg, #2ecc71, #27ae60); height: 100%; text-align: center; color: white; line-height: 30px; font-weight: bold; transition: width 0.5s ease-in-out; }
+        
+        input, select { margin: 10px 0; padding: 12px; width: 100%; box-sizing: border-box; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; }
+        input:focus { border-color: #667eea; outline: none; }
+
+        button { background: #4834d4; color: white; border: none; padding: 14px; cursor: pointer; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; transition: transform 0.2s, background 0.2s; }
+        button:hover { background: #3c2bb3; transform: translateY(-2px); }
+        
+        ul { list-style: none; padding: 0; }
+        li { background: #ffffff; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* History item colors based on type */
+        .type-goal { border-left: 6px solid #2ecc71; }
+        .type-expense { border-left: 6px solid #e74c3c; }
+        
+        .delete-btn { color: #ff7675; text-decoration: none; font-weight: bold; font-size: 18px; padding: 0 10px; }
+        .delete-btn:hover { color: #d63031; }
+
+        .settings-form { font-size: 0.9em; color: #636e72; border-top: 2px dashed #dfe6e9; padding-top: 25px; margin-top: 25px; }
+        .settings-form h4 { color: #2d3436; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
     <div class="card">
-        <h2 class="section-title">🏠 {{ goal.name }} Goal</h2>
+        <h2>Target: {{ goal.name }}</h2>
+        <p>Goal Amount: <strong>${{ "{:,.2f}".format(goal.target) }}</strong></p>
         <div class="progress-container">
-            <div class="progress-bar" style="--pg-width: {{ percent }}%;">{{ percent|round|int }}%</div>
+            <div id="dynamic-bar" class="progress-bar">
+                {{ progress }}%
+            </div>
         </div>
-        <p>Saved for Apartment: <strong>${{ "{:,.2f}".format(apartment_savings) }}</strong> / ${{ "{:,.2f}".format(goal.target) }}</p>
-        
-        <form action="/add_transaction" method="POST">
-            <input type="number" step="0.01" name="amount" placeholder="Amount to add to {{ goal.name }}" required>
-            <input type="text" name="source" placeholder="Source (e.g. Work Paycheck)" required>
-            <input type="hidden" name="type" value="apartment">
-            <button type="submit" style="background: #007bff;">Deposit to Apartment Fund</button>
+        <p style="font-size: 1.1em;">Saved: <span style="color: #27ae60; font-weight: bold;">${{ "{:,.2f}".format(current_savings) }}</span></p>
+    </div>
+
+    <div class="card">
+        <h3>Add Transaction</h3>
+        <form action="/add" method="POST">
+            <select name="type">
+                <option value="Goal">Deposit to Goal</option>
+                <option value="Expense">General Expense</option>
+            </select>
+            <input type="number" step="0.01" name="amount" placeholder="Amount ($)" required>
+            <input type="text" name="description" placeholder="Description (e.g. Weekly Savings)" required>
+            <button type="submit">Add to Log</button>
         </form>
     </div>
 
     <div class="card">
-        <h2 class="section-title">💸 Daily Expenses</h2>
-        <p>Total Spent (Apartment not affected): <strong style="color: #ef6c00;">${{ "{:,.2f}".format(total_expenses) }}</strong></p>
-        
-        <form action="/add_transaction" method="POST">
-            <input type="number" step="0.01" name="amount" placeholder="Amount spent" required>
-            <input type="text" name="source" placeholder="Spent on? (e.g. Lunch, Gas)" required>
-            <input type="hidden" name="type" value="expense">
-            <button type="submit" style="background: #ef6c00;">Log Expense</button>
-        </form>
+        <h3>Transaction History</h3>
+        <ul>
+            {% for t in transactions %}
+            <li class="type-{{ t.type|lower }}">
+                <span><strong>{{ t.type }}:</strong> {{ t.description }} - ${{ "{:,.2f}".format(t.amount) }}</span>
+                <a href="/delete/{{ t.id }}" class="delete-btn" title="Delete entry">&times;</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="settings-form">
+            <h4>Update Application Goal</h4>
+            <form action="/update_goal" method="POST">
+                <input type="text" name="goal_name" placeholder="Change Goal Name" required>
+                <input type="number" step="0.01" name="goal_target" placeholder="New Target Amount ($)" required>
+                <button type="submit" style="background: #636e72;">Save New Goal</button>
+            </form>
+        </div>
     </div>
 
-    <div class="card">
-        <h3 class="section-title">History</h3>
-        {% for item in history %}
-        <div class="history-item">
-            <div>
-                <span class="tag {{ 'tag-apt' if item.ttype == 'apartment' else 'tag-exp' }}">
-                    {{ 'Goal' if item.ttype == 'apartment' else 'Spend' }}
-                </span>
-                <strong>{{ item.source }}</strong>
-            </div>
-            <div>
-                <span>${{ "{:,.2f}".format(item.amount) }}</span>
-                <a href="/delete/{{ item.id }}" style="color:#ccc; text-decoration:none; margin-left:10px;">×</a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+    <script>
+        // Keeps the progress bar working without triggering VS Code CSS errors
+        document.getElementById('dynamic-bar').style.width = "{{ progress }}%";
+    </script>
 
 </body>
 </html>
