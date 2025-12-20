@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Spending Reports</h2>
+<div class="card p-4 border-0 shadow-sm">
+    <ul class="list-group">
+        {% for category, total in cat_totals.items() %}
+        <li class="list-group-item d-flex justify-content-between">
+            <span>{{ category }}</span>
+            <span class="fw-bold text-danger">${{ "%.2f"|format(total) }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
